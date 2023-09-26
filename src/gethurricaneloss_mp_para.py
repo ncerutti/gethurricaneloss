@@ -3,7 +3,7 @@
 import argparse
 import logging
 import multiprocessing
-from tqdm import tqdm
+from tqdm import tqdm  # currently unused
 from numba import jit
 import numpy as np
 
@@ -49,7 +49,26 @@ def worker_function(params):
         gulf_stddev,
         local_samples,
     ) = params
+    """
+    Computes the total loss for hurricanes in both Florida and the Gulf states for a given set of samples.
 
+    This function operates in batches to facilitate larger numbers of samples. Each batch computes the loss
+    for both Florida and the Gulf states. The function then aggregates the total loss over all batches and any 
+    remaining samples (if the number of samples is not perfectly divisible by the batch size).
+
+    Parameters:
+    - params (tuple): Contains the following values:
+        * florida_rate (float): Expected number of hurricanes in Florida.
+        * florida_mean (float): Mean of the lognormal distribution of hurricane losses in Florida.
+        * florida_stddev (float): SD of the lognormal distribution of hurricane losses in Florida.
+        * gulf_rate (float): Expected number of hurricanes in Gulf states.
+        * gulf_mean (float): Mean of the lognormal distribution of hurricane losses in Gulf states.
+        * gulf_stddev (float): SD of the lognormal distribution of hurricane losses in Gulf states.
+        * local_samples (int): Number of samples to be processed by this worker.
+
+    Returns:
+    - float: The total hurricane loss over all the samples processed by this worker.
+    """
     # How many rows of data to process at a time
 
     batch_size = 1000000
@@ -59,14 +78,17 @@ def worker_function(params):
     batches = local_samples // batch_size
 
     local_total_loss = 0.0
+    # Compute loss for each batch
     for _ in range(batches):
         florida_losses = simulate_loss(
             florida_rate, florida_mean, florida_stddev, batch_size
         )
         gulf_losses = simulate_loss(gulf_rate, gulf_mean, gulf_stddev, batch_size)
+
+        # Accumulate the total loss for this batch
         local_total_loss += (florida_losses + gulf_losses).sum()
 
-    # Handle remaining samples if local_samples is not divisible by batch_size
+    # Run for the remaining samples if local_samples is not divisible by batch_size
     remaining_samples = local_samples % batch_size
     if remaining_samples > 0:
         florida_losses = simulate_loss(
@@ -127,6 +149,8 @@ def compute_loss(
 
     # Split work among cores
     samples_per_core = num_samples // num_cores
+
+    # Create parameters for each process
     params = [
         (
             florida_rate,
@@ -143,13 +167,14 @@ def compute_loss(
     with multiprocessing.Pool(num_cores) as pool:
         results = pool.map(worker_function, params)
 
-    # Combine results from all processes
+    # Sum the results from all cores and divide by total number of samples for the average
     total_loss = sum(results)
 
     return total_loss / num_samples
 
 
 def main():
+    # Set up logging in file logs.log
     logging.basicConfig(
         filename="logs.log",
         level=logging.DEBUG,
@@ -167,6 +192,7 @@ def main():
     parser.add_argument("gulf_stddev", type=float)
     parser.add_argument("-n", "--num_monte_carlo_samples", type=int, default=1000)
 
+    # Extract and check command-line arguments
     args = parser.parse_args()
 
     check_input(args.florida_landfall_rate, "Florida landfall rate")
@@ -179,6 +205,8 @@ def main():
 
     logging.info("Starting hurricane loss calculation...")
 
+    # Execute the main computation and handle any exceptions
+    # They will be logged and, if this does not work, the whole program does not make much sense
     try:
         result = compute_loss(
             args.florida_landfall_rate,
