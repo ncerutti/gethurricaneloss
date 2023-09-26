@@ -1,6 +1,7 @@
 # src/hurricane.py
 
 import argparse
+import logging
 import timeit
 from numba import jit
 import numpy as np
@@ -8,15 +9,17 @@ import numpy as np
 
 def check_input(value, name):
     if value < 0:
+        logging.error(f"Invalid input for {name}: {value}")
         raise ValueError(f"{name} should be a positive number")
 
 
 def check_samples(value, name):
     if value < 1:
+        logging.error(f"Invalid input for {name}: {value}")
         raise ValueError(f"{name} should be a positive number")
 
 
-@jit(nopython=True)
+# @jit(nopython=False)
 def calculate_loss(
     florida_rate: float,
     florida_mean: float,
@@ -39,12 +42,22 @@ def calculate_loss(
         for _ in range(gulf_events):
             simulation_loss += np.random.lognormal(gulf_mean, gulf_stddev)
 
+        print(
+            f"Simulation loss for current iteration: {simulation_loss}"
+        )  # Add this line
+
         total_loss += simulation_loss
 
     return total_loss / num_samples
 
 
 def main():
+    logging.basicConfig(
+        filename="logs.log",
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+
     parser = argparse.ArgumentParser(
         description="Calculates the average annual hurricane loss in $Billions for a simple hurricane model."
     )
@@ -66,19 +79,27 @@ def main():
     check_input(args.gulf_stddev, "Gulf stddev")
     check_samples(args.num_monte_carlo_samples, "Number of Monte Carlo samples")
 
-    result = calculate_loss(
-        args.florida_landfall_rate,
-        args.florida_mean,
-        args.florida_stddev,
-        args.gulf_landfall_rate,
-        args.gulf_mean,
-        args.gulf_stddev,
-        args.num_monte_carlo_samples,
-    )
+    logging.info("Starting hurricane loss calculation...")
+
+    try:
+        result = calculate_loss(
+            args.florida_landfall_rate,
+            args.florida_mean,
+            args.florida_stddev,
+            args.gulf_landfall_rate,
+            args.gulf_mean,
+            args.gulf_stddev,
+            args.num_monte_carlo_samples,
+        )
+        print(result)
+    except Exception as e:
+        logging.error(f"Error during hurricane loss calculation: {e}")
+        raise e
+
+    logging.info("Hurricane loss calculation complete.")
 
     print(f"Expected annual economic loss: ${result:.2f} billion")
 
 
 if __name__ == "__main__":
-    # main()
-    print(timeit.timeit("calculate_loss(0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 1000)", number=100, globals=globals()))
+    main()
