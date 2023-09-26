@@ -18,6 +18,8 @@ a command line utility to calculate Florida and Gulf states hurricane losses
 
 gethurricaneloss [options] florida_landfall_rate florida_mean florida_stddev gulf_landfall_rate gulf_mean gulf_stddev
 
+**CAUTION:** I suggest using gethurricaneloss_mp_para.py. Gethurricaneloss may take a long time to compute, depending on the sample size. Please see below (Performance) for more information.
+
 Calculates the average annual hurricane loss in $Billions for a simple hurricane model. The model
 is parameterized by:
 
@@ -40,7 +42,13 @@ options:
 
 unning "pytest" from the root directory will produce a "speed.txt" file, which provides a benchmark of the different versions of the model. The parameters it is tested on are:
 
-10.0, 2.0, 1.0, 10.0, 2.0, 1.0, 5000000
+florida_landfall_rate: 10.0
+florida_mean: 2.0
+florida_stddev: 1.0
+gulf_landfall_rate: 10.0
+gulf_mean: 2.0
+gulf_stddev: 1.0
+num_samples: 5000000
 
 In principle, a more thorough benchmark (more executions, providing standard deviations) could help better quantifying any differences in performance.
 Please note that the times indicated and the differences between them might differ based on the hardware the model is running on.
