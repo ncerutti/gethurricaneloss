@@ -16,7 +16,7 @@ a command line utility to calculate Florida and Gulf states hurricane losses
 
 # Usage:
 
-gethurricaneloss_**version** [options] florida_landfall_rate florida_mean florida_stddev gulf_landfall_rate gulf_mean gulf_stddev
+gethurricaneloss**_version** [options] florida_landfall_rate florida_mean florida_stddev gulf_landfall_rate gulf_mean gulf_stddev
 
 **CAUTION:** I suggest using gethurricaneloss_mp_para.py. Gethurricaneloss may take a long time to compute, depending on the sample size. Please see below (Performance) for more information.
 
