@@ -2,25 +2,60 @@
 
 import argparse
 import logging
-import timeit
+from tqdm import tqdm
 from numba import jit
 import numpy as np
 
 
 def check_input(value, name):
+    """
+    Checks that the input value is >= 0.
+
+    Parameters:
+    - value (float): The input value to check.
+    - name (str): The name/description of the input (used for error messaging).
+
+    Raises:
+    - ValueError: If the input value is negative.
+    """
     if value < 0:
         logging.error(f"Invalid input for {name}: {value}")
         raise ValueError(f"{name} should be a positive number")
 
 
 def check_samples(value, name):
+    """Validates that the sample value is positive and not zero.
+
+    Parameters:
+    - value (int): The input value representing number of samples to check.
+    - name (str): The name/description of the input (used for error messaging).
+
+    Raises:
+    - ValueError: If the input value is less than 1.
+    """
     if value < 1:
         logging.error(f"Invalid input for {name}: {value}")
         raise ValueError(f"{name} should be a positive number")
 
 
-# @jit(nopython=False)
-def calculate_loss(
+@jit(nopython=True)
+def simulate_loss(rate: float, mean: float, stddev: float) -> float:
+    """
+    Simulate hurricane loss for given rate, mean, and stddev.
+
+    Parameters:
+    - rate (float): The expected number of hurricanes.
+    - mean (float): Mean of the lognormal distribution of hurrican losses.
+    - stddev (float): SD of the lognormal distribution of hurrican losses.
+    """
+    events = np.random.poisson(rate)
+    total = 0
+    for _ in range(events):
+        total += np.random.lognormal(mean, stddev)
+    return total
+
+
+def compute_loss(
     florida_rate: float,
     florida_mean: float,
     florida_stddev: float,
@@ -29,23 +64,27 @@ def calculate_loss(
     gulf_stddev: float,
     num_samples: int,
 ) -> float:
+    """
+    Calculates the average loss due to hurricanes in Florida and in the Gulf states over a number of runs.
+
+    Parameters:
+    - florida_rate (float): The expected number of hurricanes in Florida.
+    - florida_mean (float): Mean of the lognormal distribution of hurrican losses in Florida.
+    - florida_stddev (float): SD of the lognormal distribution of hurrican losses in Florida.
+    - gulf_rate (float): The expected number of hurricanes in Gulf states.
+    - gulf_mean (float): Mean of the lognormal distribution of hurrican losses in Gulf states.
+    - gulf_stddev (float): SD of the lognormal distribution of hurrican losses in Gulf states.
+    - num_samples (int): The number of runs.
+
+    Returns:
+    - float: The average calculated loss over the number of samples.
+    """
+
     total_loss = 0
 
-    for _ in range(num_samples):
-        simulation_loss = 0
-
-        florida_events = np.random.poisson(florida_rate)
-        for _ in range(florida_events):
-            simulation_loss += np.random.lognormal(florida_mean, florida_stddev)
-
-        gulf_events = np.random.poisson(gulf_rate)
-        for _ in range(gulf_events):
-            simulation_loss += np.random.lognormal(gulf_mean, gulf_stddev)
-
-        print(
-            f"Simulation loss for current iteration: {simulation_loss}"
-        )  # Add this line
-
+    for _ in tqdm(range(num_samples), desc="Running simulation"):
+        simulation_loss = simulate_loss(florida_rate, florida_mean, florida_stddev)
+        simulation_loss += simulate_loss(gulf_rate, gulf_mean, gulf_stddev)
         total_loss += simulation_loss
 
     return total_loss / num_samples
@@ -82,7 +121,7 @@ def main():
     logging.info("Starting hurricane loss calculation...")
 
     try:
-        result = calculate_loss(
+        result = compute_loss(
             args.florida_landfall_rate,
             args.florida_mean,
             args.florida_stddev,
@@ -91,14 +130,13 @@ def main():
             args.gulf_stddev,
             args.num_monte_carlo_samples,
         )
-        print(result)
     except Exception as e:
         logging.error(f"Error during hurricane loss calculation: {e}")
         raise e
 
     logging.info("Hurricane loss calculation complete.")
 
-    print(f"Expected annual economic loss: ${result:.2f} billion")
+    print(f"Expected annual economic loss: ${result:.4f} billion")
 
 
 if __name__ == "__main__":
