@@ -2,7 +2,7 @@
 
 import pytest
 import time
-from gethurricaneloss_base import (
+from src.gethurricaneloss_base import (
     check_input,
     check_samples,
     simulate_loss,
