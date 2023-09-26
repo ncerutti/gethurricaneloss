@@ -15,10 +15,11 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "gethurricaneloss = src.gethurricaneloss:main",
+            "gethurricaneloss_base = src.gethurricaneloss_base:main",
             "gethurricaneloss_jit = src.gethurricaneloss_jit:main",
             "gethurricaneloss_mp = src.gethurricaneloss_mp:main",
             "gethurricaneloss_mp_para = src.gethurricaneloss_mp_para:main",
+            "gethurricaneloss = src.gethurricaneloss_mp_para:main",
         ],
     },
 )
