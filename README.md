@@ -70,7 +70,7 @@ This version improves over the previous by using python's *multiprocessing* libr
 
 - **gethurricaneloss_mp_para.py**: 1.0176 seconds
 
-Instead of running the simulations *n* times (where *n* is the number of samples we want, i.e. how many times the simulation will run), it runs it in batches (1000000 currently, ideally it should be a tunable parameter). This allows us to leverage the speed of *numpy* in computing matrix operations.
+Instead of running the simulations *n* times (where *n* is the number of samples we want, i.e. how many times the simulation will run), it runs it in batches (1000000 currently on my laptop, ideally it should be a tunable parameter). This allows us to leverage the speed of *numpy* in computing matrix operations.
 
 **Steps Forward**:
 
