@@ -1,8 +1,11 @@
-# tests/test_gethurricaneloss.py
-
 import pytest
 import time
-from src.gethurricaneloss import check_input, check_samples, simulate_loss, compute_loss
+from src.gethurricaneloss_mp import (
+    check_input,
+    check_samples,
+    simulate_loss,
+    compute_loss,
+)
 
 
 def test_check_input_valid():
@@ -47,14 +50,10 @@ def test_compute_loss_2():
 
 def test_speed():
     """Test how long it takes to run compute_loss(). It must be below 30 seconds. Saves it to disk for comparison."""
-
     start = time.time()
-    compute_loss(10.0, 2.0, 1.0, 10.0, 2.0, 1.0, 500000)
+    compute_loss(10.0, 2.0, 1.0, 10.0, 2.0, 1.0, 5000000)
     end = time.time()
     elapsed_time = end - start
     with open("speeds.txt", "a") as file:
-        file.write(
-            f"gethurricaneloss.py: {elapsed_time:.4f} seconds with 1/10th of the sample\n"
-        )
-
+        file.write(f"gethurricaneloss_mp.py: {elapsed_time:.4f} seconds\n")
     assert elapsed_time < 30

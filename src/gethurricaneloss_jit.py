@@ -3,6 +3,7 @@
 import argparse
 import logging
 from tqdm import tqdm
+from numba import jit
 import numpy as np
 
 
@@ -37,6 +38,7 @@ def check_samples(value, name):
         raise ValueError(f"{name} should be a positive number")
 
 
+@jit(nopython=True)
 def simulate_loss(rate: float, mean: float, stddev: float) -> float:
     """
     Simulate hurricane loss for given rate, mean, and stddev.
@@ -80,7 +82,7 @@ def compute_loss(
 
     total_loss = 0
 
-    for _ in range(num_samples):
+    for _ in tqdm(range(num_samples), desc="Running simulation"):
         simulation_loss = simulate_loss(florida_rate, florida_mean, florida_stddev)
         simulation_loss += simulate_loss(gulf_rate, gulf_mean, gulf_stddev)
         total_loss += simulation_loss

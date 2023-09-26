@@ -1,8 +1,10 @@
-# src/gethurricaneloss.py
+# src/gethurricaneloss_mp_para.py
 
 import argparse
 import logging
+import multiprocessing
 from tqdm import tqdm
+from numba import jit
 import numpy as np
 
 
@@ -37,7 +39,51 @@ def check_samples(value, name):
         raise ValueError(f"{name} should be a positive number")
 
 
-def simulate_loss(rate: float, mean: float, stddev: float) -> float:
+def worker_function(params):
+    (
+        florida_rate,
+        florida_mean,
+        florida_stddev,
+        gulf_rate,
+        gulf_mean,
+        gulf_stddev,
+        local_samples,
+    ) = params
+
+    # How many rows of data to process at a time
+
+    batch_size = 1000000
+
+    # The losses will be computed num_samples // batch_size times
+
+    batches = local_samples // batch_size
+
+    local_total_loss = 0.0
+    for _ in range(batches):
+        florida_losses = simulate_loss(
+            florida_rate, florida_mean, florida_stddev, batch_size
+        )
+        gulf_losses = simulate_loss(gulf_rate, gulf_mean, gulf_stddev, batch_size)
+        local_total_loss += (florida_losses + gulf_losses).sum()
+
+    # Handle remaining samples if local_samples is not divisible by batch_size
+    remaining_samples = local_samples % batch_size
+    if remaining_samples > 0:
+        florida_losses = simulate_loss(
+            florida_rate, florida_mean, florida_stddev, remaining_samples
+        )
+        gulf_losses = simulate_loss(
+            gulf_rate, gulf_mean, gulf_stddev, remaining_samples
+        )
+        local_total_loss += (florida_losses + gulf_losses).sum()
+
+    return local_total_loss
+
+
+@jit(nopython=True)
+def simulate_loss(
+    rate: float, mean: float, stddev: float, batch_size: int
+) -> np.ndarray:
     """
     Simulate hurricane loss for given rate, mean, and stddev.
 
@@ -46,11 +92,9 @@ def simulate_loss(rate: float, mean: float, stddev: float) -> float:
     - mean (float): Mean of the lognormal distribution of hurrican losses.
     - stddev (float): SD of the lognormal distribution of hurrican losses.
     """
-    events = np.random.poisson(rate)
-    total = 0
-    for _ in range(events):
-        total += np.random.lognormal(mean, stddev)
-    return total
+    events = np.random.poisson(rate, batch_size)
+    losses = np.array([np.random.lognormal(mean, stddev, e).sum() for e in events])
+    return losses
 
 
 def compute_loss(
@@ -78,12 +122,29 @@ def compute_loss(
     - float: The average calculated loss over the number of samples.
     """
 
-    total_loss = 0
+    # Number of cores available
+    num_cores = multiprocessing.cpu_count()
 
-    for _ in range(num_samples):
-        simulation_loss = simulate_loss(florida_rate, florida_mean, florida_stddev)
-        simulation_loss += simulate_loss(gulf_rate, gulf_mean, gulf_stddev)
-        total_loss += simulation_loss
+    # Split work among cores
+    samples_per_core = num_samples // num_cores
+    params = [
+        (
+            florida_rate,
+            florida_mean,
+            florida_stddev,
+            gulf_rate,
+            gulf_mean,
+            gulf_stddev,
+            samples_per_core,
+        )
+        for _ in range(num_cores)
+    ]
+
+    with multiprocessing.Pool(num_cores) as pool:
+        results = pool.map(worker_function, params)
+
+    # Combine results from all processes
+    total_loss = sum(results)
 
     return total_loss / num_samples
 
