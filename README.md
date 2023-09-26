@@ -53,6 +53,9 @@ num_samples: 5000000
 In principle, a more thorough benchmark (more executions, providing standard deviations) could help better quantifying any differences in performance.
 Please note that the times indicated and the differences between them might differ based on the hardware the model is running on.
 
+Also, please note that not all optimizations work regardless of the size of the sample and on the underlying hardware. It might as well be that they should be tailored to specific cases. Therefore it is very important to run the *pytest* benchmark and/or specific benchmarks for the use case.
+
+
 Beneath a description of the differences between the scripts, their performance as measured on my laptop, and what steps I took in optimizing them:
 
 
