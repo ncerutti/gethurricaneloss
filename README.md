@@ -38,9 +38,14 @@ options:
 - It currently includes some input validation (number of inputs and value, all positive), and the argument parser checks that the inputs are indeed numbers.
 - I thought about adding further info (SD of losses, 95% CI, min/max). This would be a light calculation (just one float per run), but it goes beyond the task.
 
+
+
+
 ## Performance:
 
-unning "pytest" from the root directory will produce a "speed.txt" file, which provides a benchmark of the different versions of the model. The parameters it is tested on are:
+
+
+Running "pytest" from the root directory will produce a "speed.txt" file, which provides a benchmark of the different versions of the model. The parameters it is tested on are:
 
 florida_landfall_rate: 10.0
 florida_mean: 2.0
@@ -54,6 +59,9 @@ In principle, a more thorough benchmark (more executions, providing standard dev
 Please note that the times indicated and the differences between them might differ based on the hardware the model is running on.
 
 Also, please note that not all optimizations work regardless of the size of the sample and on the underlying hardware. It might as well be that they should be tailored to specific cases. Therefore it is very important to run the *pytest* benchmark and/or specific benchmarks for the use case.
+
+
+
 
 
 Beneath a description of the differences between the scripts, their performance as measured on my laptop, and what steps I took in optimizing them:
@@ -79,12 +87,15 @@ Instead of running the simulations *n* times (where *n* is the number of samples
 
 As the previous version, but the losses are calculated once for all events, instead of once per event.
 
+
+
+
 **Steps Forward**:
 
-The batching of the matrix operations in the last model is not currently optimized. Searching the optimal number to reduce computing times for the machine would be the next step.
-Further, another straightforward (but potentially costly) step would be to use a more perfoming machine.
-With a similar approach, heavy calculations could be distributed among more nodes using tools like Dask.
-The algorithm might be improved by leveraging GPUs for matrix operations.
-While I have applied a certain number of algorithmic improvements, there are likely other significant improvements that could further reduce runtimes.
-Especially thinking about expanding the algorithm, further optimizations could emerge for more than 2 countries.
-Some further optimizations could be, e.g., checking that the event rate and/or mean and standard deviation of the countries are the same before the calculation. If they are, further parallelization optimizations are possible.
+- Some further optimizations could be, e.g., checking that the event rate and/or mean and standard deviation of the countries are the same before the calculation. If they are, further parallelization optimizations are possible.
+- The batching of the matrix operations in the last model is not currently optimized. Searching the optimal number to reduce computing times for the machine would be the next step.
+- Further, another straightforward (but potentially costly) step would be to use a more perfoming machine.
+- With a similar approach, heavy calculations could be distributed among more nodes using tools like Dask.
+- The algorithm might be improved by leveraging GPUs for matrix operations.
+- While I have applied a certain number of algorithmic improvements, there are likely other significant improvements that could further reduce runtimes.
+- For what concerns algorithmic improvements, further optimizations could emerge for more than 2 countries.
