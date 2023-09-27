@@ -9,7 +9,7 @@ setup(
     url="https://github.com/ncerutti/gethurricaneloss",
     install_requires=[
         "numba==0.58.0",
-        "numpy==1.25.2",
+        "numpy==1.25.0",
         "pytest==7.4.2",
         "tqdm==4.66.1",
     ],
@@ -19,7 +19,8 @@ setup(
             "gethurricaneloss_jit = src.gethurricaneloss_jit:main",
             "gethurricaneloss_mp = src.gethurricaneloss_mp:main",
             "gethurricaneloss_mp_para = src.gethurricaneloss_mp_para:main",
-            "gethurricaneloss = src.gethurricaneloss_mp_para:main",
+            "gethurricaneloss_two = src.gethurricaneloss_two:main",
+            "gethurricaneloss = src.gethurricaneloss_two:main",
         ],
     },
 )

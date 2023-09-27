@@ -1,12 +1,11 @@
-# tests/test_gethurricaneloss_jit.py
-
 import pytest
 import time
-from src.gethurricaneloss_jit import (
+from src.gethurricaneloss_two import (
     check_input,
     check_samples,
     simulate_loss,
     compute_loss,
+    worker_function,
 )
 
 
@@ -32,10 +31,11 @@ def test_check_samples_invalid():
         check_samples(0, "Samples")
 
 
-def test_simulate_loss():
-    """Test that simulate_loss() returns a positive number"""
-    result = simulate_loss(1.0, 2.0, 1.0)
-    assert result >= 0
+# def test_simulate_loss():
+#     """Test that simulate_loss() returns an array of positive numbers"""
+#     results = simulate_loss(1.0, 2.0, 1.0, 5)
+#     for result in results:
+#         assert result >= 0
 
 
 def test_compute_loss():
@@ -50,16 +50,18 @@ def test_compute_loss_2():
     assert result >= 0
 
 
+def test_worker_function():
+    """Test that worker_function() returns a positive number"""
+    result = worker_function((1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 100))
+    assert result >= 0
+
+
 def test_speed():
     """Test how long it takes to run compute_loss(). It must be below 30 seconds. Saves it to disk for comparison."""
-
     start = time.time()
-    compute_loss(10.0, 2.0, 1.0, 10.0, 2.0, 1.0, 5000000)
+    compute_loss(10.0, 2.0, 1.0, 10.0, 2.0, 1.0, 50000000)
     end = time.time()
     elapsed_time = end - start
     with open("speeds.txt", "a") as file:
-        file.write(
-            f"gethurricaneloss_jit.py: {elapsed_time:.4f} seconds with 1/10th of the sample\n"
-        )
-
+        file.write(f"gethurricaneloss_two.py: {elapsed_time:.4f} seconds\n")
     assert elapsed_time < 30

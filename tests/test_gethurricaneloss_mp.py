@@ -51,7 +51,7 @@ def test_compute_loss_2():
 def test_speed():
     """Test how long it takes to run compute_loss(). It must be below 30 seconds. Saves it to disk for comparison."""
     start = time.time()
-    compute_loss(10.0, 2.0, 1.0, 10.0, 2.0, 1.0, 5000000)
+    compute_loss(10.0, 2.0, 1.0, 10.0, 2.0, 1.0, 50000000)
     end = time.time()
     elapsed_time = end - start
     with open("speeds.txt", "a") as file:

@@ -48,7 +48,7 @@ florida_stddev: 1.0
 gulf_landfall_rate: 10.0
 gulf_mean: 2.0
 gulf_stddev: 1.0
-num_samples: 5000000
+num_samples: 50000000
 
 In principle, a more thorough benchmark (more executions, providing standard deviations) could help better quantifying any differences in performance.
 Please note that the times indicated and the differences between them might differ based on the hardware the model is running on.
@@ -59,21 +59,25 @@ Also, please note that not all optimizations work regardless of the size of the 
 Beneath a description of the differences between the scripts, their performance as measured on my laptop, and what steps I took in optimizing them:
 
 
-- **gethurricaneloss_base.py**: 8.1010 seconds with 1/10th of the sample
+- **gethurricaneloss_base.py**: 10.2141 seconds with 1/10th of the sample
 
 Base version of the code. No optimization.
 
-- **gethurricaneloss_jit.py**: 7.6666 seconds
+- **gethurricaneloss_jit.py**: 8.4518 seconds with 1/10th of the sample
 
 It differs from the previous version only in the use of *numba* in the simulation part. Very large improvement.
 
-- **gethurricaneloss_mp.py**: 1.7338 seconds
+- **gethurricaneloss_mp.py**: 24.4029 seconds
 
 This version improves over the previous by using python's *multiprocessing* library.
 
-- **gethurricaneloss_mp_para.py**: 1.0176 seconds
+- **gethurricaneloss_mp_para.py**: 16.3060 seconds
 
 Instead of running the simulations *n* times (where *n* is the number of samples we want, i.e. how many times the simulation will run), it runs it in batches (1000000 currently on my laptop, ideally it should be a tunable parameter). This allows us to leverage the speed of *numpy* in computing matrix operations.
+
+- **gethurricaneloss_two**: 13.8604 seconds
+
+As the previous version, but the losses are calculated once for all events, instead of once per event.
 
 **Steps Forward**:
 
@@ -82,3 +86,5 @@ Further, another straightforward (but potentially costly) step would be to use a
 With a similar approach, heavy calculations could be distributed among more nodes using tools like Dask.
 The algorithm might be improved by leveraging GPUs for matrix operations.
 While I have applied a certain number of algorithmic improvements, there are likely other significant improvements that could further reduce runtimes.
+Especially thinking about expanding the algorithm, further optimizations could emerge for more than 2 countries.
+Some further optimizations could be, e.g., checking that the event rate and/or mean and standard deviation of the countries are the same before the calculation. If they are, further parallelization optimizations are possible.
