@@ -11,7 +11,7 @@ setup(
         "numba==0.58.0",
         "numpy==1.25.0",
         "pytest==7.4.2",
-        "tqdm==4.66.1",
+        "tqdm==4.66.3",
     ],
     entry_points={
         "console_scripts": [
