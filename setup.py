@@ -10,7 +10,7 @@ setup(
     install_requires=[
         "numba==0.58.0",
         "numpy==1.25.0",
-        "pytest==7.4.2",
+        "pytest==9.0.3",
         "tqdm==4.66.3",
     ],
     entry_points={
